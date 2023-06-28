@@ -95,6 +95,7 @@ class Data_Class:
         plt.show()
     def plot_action_potential(self):
         # plot spike train data
+        plt.figure("Spike_shape")
         plt.plot(self.spike_train)
 
     def find_first_max_v(self,start_search=2000,comparison_interval=150):
@@ -173,6 +174,7 @@ class Data_Class:
             self.find_other_maximum_points()
             self.voltage_cleaning()
         # fig, axs = plt.subplots(2, 1, figsize=(4, 3), layout='constrained')
+        plt.figure("Combined_spike_and_peak")
         plt.subplot(211)
         plt.plot(self.current)
         # figure configuration
