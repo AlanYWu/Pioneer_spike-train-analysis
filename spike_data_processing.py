@@ -7,16 +7,17 @@ import ipywidgets as widgets
 # interactive programming package
 
 import matplotlib.pyplot as plt
+plt.ion()
 # https://matplotlib.org/stable/users/explain/interactive.html
 
-
+import os
 # How to use the magic line https://blog.csdn.net/weixin_42311095/article/details/85009922
 
 
 class Data_Class:
     
 
-    def __init__(self,file_path):
+    def __init__(self,file_path,sampling_rate):
         # set titles, data, current, voltage
         self.titles = ["current/pA","voltage/mV"]
         self.x_label = "t/ ms"
@@ -24,6 +25,8 @@ class Data_Class:
         self.current = pd.DataFrame()
         self.voltage = pd.DataFrame() #stored in python list 1xN
 
+        self.sampling_rate = sampling_rate
+        
         self.max_voltage = []
         
         self.spike_number = 0
@@ -71,7 +74,7 @@ class Data_Class:
             for i in range (self.spike_number):
                 S = "S"+str(i+1)
                 spike = self.extract_single_spike_data(i)
-                S = Spike_Processing(spike,self.file_path,i+1)
+                S = Spike_Processing(spike,self.sampling_rate,self.file_path,i+1)
                 feature_extracted = S.spike_processing_main()
                 self.spike_features = pd.concat([self.spike_features,feature_extracted],ignore_index=True)
             return self.spike_features
@@ -109,12 +112,11 @@ class Data_Class:
         first_max = 0
         for i in range(start_search,self.voltage.__len__()):
             flag = False
-            while (all(self.voltage[i+1:i+comparison_interval].values<self.voltage.iloc[i,:].values)):
+            if(all(self.voltage[i+1:i+comparison_interval].values<self.voltage.iloc[i,:].values) and self.voltage.iloc[i,:].values>0):
                 first_max=self.voltage.iloc[i,:].values
                 flag=True
                 # print("max index",i)
-                self.max_voltage.append([i,float(self.voltage.iloc[i,:].values)])
-                break
+                self.max_voltage.append([i,float(first_max)])
             if (flag):
                 break
         # print("max voltage",first_max)
@@ -128,7 +130,10 @@ class Data_Class:
             index = self.max_voltage[0][0]
             spike_count = 1
             while index<end_search:
+                len_max_voltage = len(self.max_voltage)
                 self.find_first_max_v(index+jump)
+                if len_max_voltage==len(self.max_voltage):
+                    break
                 spike_count += 1
                 index = self.max_voltage[spike_count-1][0]
         else:
@@ -218,11 +223,12 @@ class Data_Class:
 
 class Spike_Processing:
 
-    def __init__(self,spike_data,file_name="N1.txt",spike_number=1):
+    def __init__(self,spike_data,sampling_rate,file_name="N1.txt",spike_number=1):
         self.features = pd.DataFrame()
         self.spike_data = spike_data
         self.features["file_name"]=[file_name]
         self.features["spike_number"]=spike_number
+        self.sampling_rate = sampling_rate
     
     def spike_processing_main(self):
         self.find_peak()
@@ -261,7 +267,7 @@ class Spike_Processing:
                 if "threshold" not in self.features:
                     self.features["threshold"]=[threshold]
                     # self.features["threshold_idx"]=[threshold_idx]
-                    self.features['TTP_max']=maxidx-i
+                    self.features['TTP_max']=(maxidx-i)/self.sampling_rate
                 return threshold,threshold_idx
             
     def find_amplitude(self):
@@ -287,7 +293,7 @@ class Spike_Processing:
         # the peak means the bottom point
         max,maxidx = self.find_peak()
         min_AHP,min_AHP_idx = self.find_min_AHP()
-        time = min_AHP_idx-maxidx
+        time = (min_AHP_idx-maxidx)/self.sampling_rate
         if "TTP_AHP" not in self.features:
             self.features["TTP_AHP"]=[time]
         return time
@@ -310,13 +316,37 @@ class Spike_Processing:
             if y1<half_amplitude<y2 or y2<half_amplitude<y1:
                 x = find_x(i,y1,i+1,y2,half_amplitude)
                 list.append(x)
-        spike_width = list[1]-list[0]
+        spike_width = (list[1]-list[0])/self.sampling_rate
         if "ISI" not in self.features:
             self.features["spike_width"]=[spike_width]
         return spike_width
             
-                       
-N1 = Data_Class("N1.txt")
+
+# Data viewer: Intact
+# N1 = Data_Class("./Data/Intact/N3.txt",50000)
+# N1.main()
+# spike_features = N1.spike_features
+# print(spike_features)
+
+# Data viewer: PD
+# There is warning!!!
+N1 = Data_Class("./Data/PD/N1_PD.txt",10000)
 N1.main()
 spike_features = N1.spike_features
 print(spike_features)
+
+# total_features = pd.DataFrame()
+
+# folder = "./Data/Intact"
+# i=0
+# for filename in os.listdir(folder):
+#     i+=1 
+#     filepath = folder+"/"+filename
+#     N1 = Data_Class(filepath,50000)
+#     N1.main()
+#     spike_features = N1.spike_features
+#     if total_features.empty:
+#         total_features = spike_features
+#         continue
+#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
+# total_features.to_csv("../total_features.csv")
