@@ -160,7 +160,11 @@ class Data_Class:
             return np.array(x),np.array(y)
         x,y=extract_x_y()
         plt.scatter(x,y,marker="x")
-    def spike_extract_from_peak(self,peak_index,lower_bond=100,upper_bond=150):
+    def spike_extract_from_peak(self,peak_index,lower_bond=100,upper_bond=250):
+        coefficient = 10000/self.sampling_rate
+        lower_bond = round(lower_bond*coefficient)
+        upper_bond = round(upper_bond*coefficient)
+        
         spike_train = self.voltage.loc[peak_index-lower_bond:peak_index+upper_bond,:]
         #reset index
         spike_train = spike_train.reset_index(drop=True)
@@ -323,20 +327,20 @@ class Spike_Processing:
             
 
 # Data viewer: Intact
-# N1 = Data_Class("./Data/Intact/N3.txt",50000)
-# N1.main()
-# spike_features = N1.spike_features
-# print(spike_features)
-
-# Data viewer: PD
-# There is warning!!!
-N1 = Data_Class("./Data/PD/N1_PD.txt",10000)
+N1 = Data_Class("./Data/Intact/N3.txt",50000)
 N1.main()
 spike_features = N1.spike_features
 print(spike_features)
 
-# total_features = pd.DataFrame()
+# Data viewer: PD  There is warning!!!
+N1 = Data_Class("./Data/PD/N1_PD.txt",50000)
+N1.main()
+spike_features = N1.spike_features
+print(spike_features)
 
+
+# For Intact
+# total_features = pd.DataFrame()
 # folder = "./Data/Intact"
 # i=0
 # for filename in os.listdir(folder):
@@ -349,4 +353,21 @@ print(spike_features)
 #         total_features = spike_features
 #         continue
 #     total_features = pd.concat([total_features,spike_features],ignore_index=True)
-# total_features.to_csv("../total_features.csv")
+# total_features.to_csv("../total_features_intact.csv")
+
+
+# For PD
+# total_features = pd.DataFrame()
+# folder = "./Data/Intact"
+# i=0
+# for filename in os.listdir(folder):
+#     i+=1 
+#     filepath = folder+"/"+filename
+#     N1 = Data_Class(filepath,50000)
+#     N1.main()
+#     spike_features = N1.spike_features
+#     if total_features.empty:
+#         total_features = spike_features
+#         continue
+#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
+# total_features.to_csv("../total_features_PD.csv")
