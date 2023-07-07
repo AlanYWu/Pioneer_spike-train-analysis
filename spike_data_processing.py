@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-import ipywidgets as widgets
+# import ipywidgets as widgets
 # https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20Basics.html
 # https://zhuanlan.zhihu.com/p/263411257
 # interactive programming package
@@ -101,7 +101,7 @@ class Data_Class:
         plt.figure("Spike_shape")
         plt.plot(self.spike_train)
 
-    def find_first_max_v(self,start_search=2000,comparison_interval=150):
+    def find_first_max_v(self,start_search=2000,comparison_interval=20):
         '''
         Using the voltage plot to find the first maximum voltage peack
 
@@ -112,7 +112,7 @@ class Data_Class:
         first_max = 0
         for i in range(start_search,self.voltage.__len__()):
             flag = False
-            if(all(self.voltage[i+1:i+comparison_interval].values<self.voltage.iloc[i,:].values) and self.voltage.iloc[i,:].values>0):
+            if(all(self.voltage[i+1:i+comparison_interval].values<self.voltage.iloc[i,:].values) and self.voltage.iloc[i,:].values>-15):
                 first_max=self.voltage.iloc[i,:].values
                 flag=True
                 # print("max index",i)
@@ -120,7 +120,7 @@ class Data_Class:
             if (flag):
                 break
         # print("max voltage",first_max)
-    def find_other_maximum_points(self,jump=100,end_search=4000):
+    def find_other_maximum_points(self,jump=30,end_search=4000):
         '''
         @ jump: to add some value to peak, and continue the spike finding algorithm
         '''
@@ -184,6 +184,7 @@ class Data_Class:
             self.voltage_cleaning()
         # fig, axs = plt.subplots(2, 1, figsize=(4, 3), layout='constrained')
         plt.figure("Combined_spike_and_peak")
+            
         plt.subplot(211)
         plt.plot(self.current)
         # figure configuration
@@ -327,16 +328,16 @@ class Spike_Processing:
             
 
 # Data viewer: Intact
-N1 = Data_Class("./Data/Intact/N3.txt",50000)
-N1.main()
-spike_features = N1.spike_features
-print(spike_features)
+# N1 = Data_Class("./Data/Intact/N8.txt",50000)
+# N1.main()
+# spike_features = N1.spike_features
+# print(spike_features)
 
 # Data viewer: PD  There is warning!!!
-N1 = Data_Class("./Data/PD/N1_PD.txt",50000)
-N1.main()
-spike_features = N1.spike_features
-print(spike_features)
+# N1 = Data_Class("./Data/PD/N8_PD.txt",50000)
+# N1.main()
+# spike_features = N1.spike_features
+# print(spike_features)
 
 
 # For Intact
@@ -357,17 +358,17 @@ print(spike_features)
 
 
 # For PD
-# total_features = pd.DataFrame()
-# folder = "./Data/Intact"
-# i=0
-# for filename in os.listdir(folder):
-#     i+=1 
-#     filepath = folder+"/"+filename
-#     N1 = Data_Class(filepath,50000)
-#     N1.main()
-#     spike_features = N1.spike_features
-#     if total_features.empty:
-#         total_features = spike_features
-#         continue
-#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
-# total_features.to_csv("../total_features_PD.csv")
+total_features = pd.DataFrame()
+folder = "./Data/PD"
+i=0
+for filename in os.listdir(folder):
+    i+=1 
+    filepath = folder+"/"+filename
+    N1 = Data_Class(filepath,50000)
+    N1.main()
+    spike_features = N1.spike_features
+    if total_features.empty:
+        total_features = spike_features
+        continue
+    total_features = pd.concat([total_features,spike_features],ignore_index=True)
+total_features.to_csv("../total_features_PD.csv")
