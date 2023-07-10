@@ -328,13 +328,13 @@ class Spike_Processing:
             
 
 # Data viewer: Intact
-# N1 = Data_Class("./Data/Intact/N8.txt",50000)
-# N1.main()
-# spike_features = N1.spike_features
-# print(spike_features)
+N1 = Data_Class("./Data/Intact/N8.txt",50000)
+N1.main()
+spike_features = N1.spike_features
+print(spike_features)
 
 # Data viewer: PD  There is warning!!!
-# N1 = Data_Class("./Data/PD/N8_PD.txt",50000)
+# N1 = Data_Class("./Data/PD/N3_PD.txt",50000)
 # N1.main()
 # spike_features = N1.spike_features
 # print(spike_features)
@@ -354,21 +354,23 @@ class Spike_Processing:
 #         total_features = spike_features
 #         continue
 #     total_features = pd.concat([total_features,spike_features],ignore_index=True)
+#     total_features["Type"]="Intact"
 # total_features.to_csv("../total_features_intact.csv")
 
 
 # For PD
-total_features = pd.DataFrame()
-folder = "./Data/PD"
-i=0
-for filename in os.listdir(folder):
-    i+=1 
-    filepath = folder+"/"+filename
-    N1 = Data_Class(filepath,50000)
-    N1.main()
-    spike_features = N1.spike_features
-    if total_features.empty:
-        total_features = spike_features
-        continue
-    total_features = pd.concat([total_features,spike_features],ignore_index=True)
-total_features.to_csv("../total_features_PD.csv")
+# total_features = pd.DataFrame()
+# folder = "./Data/PD"
+# i=0
+# for filename in os.listdir(folder):
+#     i+=1 
+#     filepath = folder+"/"+filename
+#     N1 = Data_Class(filepath,50000)
+#     N1.main()
+#     spike_features = N1.spike_features
+#     if total_features.empty:
+#         total_features = spike_features
+#         continue
+#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
+#     total_features["Type"]="PD"
+# total_features.to_csv("../total_features_PD.csv")
