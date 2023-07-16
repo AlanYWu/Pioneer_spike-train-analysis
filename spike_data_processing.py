@@ -20,7 +20,7 @@ class Data_Class:
     def __init__(self,file_path,sampling_rate):
         # set titles, data, current, voltage
         self.titles = ["current/pA","voltage/mV"]
-        self.x_label = "t/ ms"
+        self.x_label = "Time (ms)"
         self.data=[]
         self.current = pd.DataFrame()
         self.voltage = pd.DataFrame() #stored in python list 1xN
@@ -36,6 +36,8 @@ class Data_Class:
         self.spike_train = pd.DataFrame()
 
         self.spike_features = pd.DataFrame()
+        
+        self.each_point = 1/self.sampling_rate*1000
 
         def read_data(data_path):  
 
@@ -99,7 +101,18 @@ class Data_Class:
     def plot_action_potential(self):
         # plot spike train data
         plt.figure("Spike_shape")
-        plt.plot(self.spike_train)
+        
+        length = self.spike_train.__len__()
+        
+        x_ticks = np.linspace(0,length*self.each_point,length)
+        x_ticks = pd.DataFrame(x_ticks)
+        
+        for i in range(self.spike_train.shape[1]):
+            self.spike_train.iloc[:,i]
+            plt.plot(x_ticks,self.spike_train)
+        plt.xlabel("Time (ms)")
+        
+        
 
     def find_first_max_v(self,start_search=2000,comparison_interval=20):
         '''
@@ -155,12 +168,12 @@ class Data_Class:
             x=[]
             y=[]
             for i in range(len(self.max_voltage)):
-                x.append(self.max_voltage[i][0])
+                x.append(self.max_voltage[i][0]*self.each_point)
                 y.append(self.max_voltage[i][1])
             return np.array(x),np.array(y)
         x,y=extract_x_y()
         plt.scatter(x,y,marker="x")
-    def spike_extract_from_peak(self,peak_index,lower_bond=100,upper_bond=250):
+    def spike_extract_from_peak(self,peak_index,lower_bond=50,upper_bond=50):
         coefficient = 10000/self.sampling_rate
         lower_bond = round(lower_bond*coefficient)
         upper_bond = round(upper_bond*coefficient)
@@ -185,21 +198,28 @@ class Data_Class:
         # fig, axs = plt.subplots(2, 1, figsize=(4, 3), layout='constrained')
         plt.figure("Combined_spike_and_peak")
             
-        plt.subplot(211)
+        plt.subplot(212)
         plt.plot(self.current)
         # figure configuration
         # plt.xlabel(x_label)
         plt.ylabel(self.titles[0])
-
-        plt.subplot(212)
-        plt.plot(self.voltage)
-        # figure configuration
         plt.xlabel(self.x_label)
+        
+        plt.subplot(211)
+        
+        length = self.voltage.__len__()
+        x_ticks = np.linspace(0,length*self.each_point,length)
+        
+        plt.plot(x_ticks,self.voltage)
+        # figure configuration
+        
         plt.ylabel(self.titles[1])
-
+        
+    
+        
         #annotation part of the data
         for i in range(len(self.max_voltage)):
-            x,y=self.max_voltage[i][0], self.max_voltage[i][1]
+            x,y=self.max_voltage[i][0]*self.each_point, self.max_voltage[i][1]
             plt.annotate(str(round(y)),xy=(x,y))
         self.plot_max_voltage()
         plt.show()
@@ -238,17 +258,17 @@ class Spike_Processing:
     def spike_processing_main(self):
         self.find_peak()
         self.find_amplitude
-        self.find_min_AHP()
+        self.find_minAHP()
         self.find_threshold()
         self.find_time_to_peak_AHP()
-        self.find_spike_width()
+        self.find_width()
         return self.features
     
     def find_peak(self):
         max = self.spike_data.max()
         maxidx = self.spike_data.idxmax()
-        if "max" not in self.features:
-            self.features["max"]=[max]
+        if "peak" not in self.features:
+            self.features["peak"]=[max]
         # if "max_idx" not in self.features:
         #     self.features["max_idx"]=[maxidx]
         return max,maxidx
@@ -272,7 +292,7 @@ class Spike_Processing:
                 if "threshold" not in self.features:
                     self.features["threshold"]=[threshold]
                     # self.features["threshold_idx"]=[threshold_idx]
-                    self.features['TTP_max']=(maxidx-i)/self.sampling_rate
+                    self.features['TTP-peak']=(maxidx-i)/self.sampling_rate*1000
                 return threshold,threshold_idx
             
     def find_amplitude(self):
@@ -283,27 +303,27 @@ class Spike_Processing:
             self.features["amplitude"]=[amplitude]
         return amplitude
 
-    def find_min_AHP(self):
+    def find_minAHP(self):
         max,maxidx = self.find_peak()
         data = self.spike_data[maxidx:]
-        min_AHP = data.min()
-        min_AHP_idx = data.idxmin()
-        if "min_AHP" not in self.features:
-            self.features["min_AHP"]=[min_AHP]
-        # if "min_AHP_idx" not in self.features:
-        #     self.features["min_AHP_idx"]=[min_AHP_idx]
-        return min_AHP, min_AHP_idx
+        minAHP = data.min()
+        minAHP_idx = data.idxmin()
+        if "minAHP" not in self.features:
+            self.features["minAHP"]=[minAHP]
+        # if "minAHP_idx" not in self.features:
+        #     self.features["minAHP_idx"]=[minAHP_idx]
+        return minAHP, minAHP_idx
 
     def find_time_to_peak_AHP(self):
         # the peak means the bottom point
         max,maxidx = self.find_peak()
-        min_AHP,min_AHP_idx = self.find_min_AHP()
-        time = (min_AHP_idx-maxidx)/self.sampling_rate
-        if "TTP_AHP" not in self.features:
-            self.features["TTP_AHP"]=[time]
+        minAHP,minAHP_idx = self.find_minAHP()
+        time = (minAHP_idx-maxidx)/self.sampling_rate*1000
+        if "TTP-AHP" not in self.features:
+            self.features["TTP-AHP"]=[time]
         return time
     
-    def find_spike_width(self):
+    def find_width(self):
         # ISI stands for inter spike interval, which is the time between the spike to reach half amplitude
         
         def find_x(x1,y1,x2,y2,y):
@@ -321,56 +341,56 @@ class Spike_Processing:
             if y1<half_amplitude<y2 or y2<half_amplitude<y1:
                 x = find_x(i,y1,i+1,y2,half_amplitude)
                 list.append(x)
-        spike_width = (list[1]-list[0])/self.sampling_rate
+        width = (list[1]-list[0])/self.sampling_rate*1000
         if "ISI" not in self.features:
-            self.features["spike_width"]=[spike_width]
-        return spike_width
+            self.features["width"]=[width]
+        return width
             
 
 # Data viewer: Intact
-N1 = Data_Class("./Data/Intact/N8.txt",50000)
+N1 = Data_Class("./Data/Intact/N8.txt",10000)
 N1.main()
 spike_features = N1.spike_features
 print(spike_features)
 
-# Data viewer: PD  There is warning!!!
-# N1 = Data_Class("./Data/PD/N3_PD.txt",50000)
+# Data viewer: PD  
+# N1 = Data_Class("./Data/PD/N3_PD.txt",10000)
 # N1.main()
 # spike_features = N1.spike_features
 # print(spike_features)
 
 
 # For Intact
-# total_features = pd.DataFrame()
-# folder = "./Data/Intact"
-# i=0
-# for filename in os.listdir(folder):
-#     i+=1 
-#     filepath = folder+"/"+filename
-#     N1 = Data_Class(filepath,50000)
-#     N1.main()
-#     spike_features = N1.spike_features
-#     if total_features.empty:
-#         total_features = spike_features
-#         continue
-#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
-#     total_features["Type"]="Intact"
-# total_features.to_csv("../total_features_intact.csv")
+total_features = pd.DataFrame()
+folder = "./Data/Intact"
+i=0
+for filename in os.listdir(folder):
+    i+=1 
+    filepath = folder+"/"+filename
+    N1 = Data_Class(filepath,10000)
+    N1.main()
+    spike_features = N1.spike_features
+    if total_features.empty:
+        total_features = spike_features
+        continue
+    total_features = pd.concat([total_features,spike_features],ignore_index=True)
+    total_features["Type"]="Intact"
+total_features.to_csv("../total_features_intact.csv")
 
 
 # For PD
-# total_features = pd.DataFrame()
-# folder = "./Data/PD"
-# i=0
-# for filename in os.listdir(folder):
-#     i+=1 
-#     filepath = folder+"/"+filename
-#     N1 = Data_Class(filepath,50000)
-#     N1.main()
-#     spike_features = N1.spike_features
-#     if total_features.empty:
-#         total_features = spike_features
-#         continue
-#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
-#     total_features["Type"]="PD"
-# total_features.to_csv("../total_features_PD.csv")
+total_features = pd.DataFrame()
+folder = "./Data/PD"
+i=0
+for filename in os.listdir(folder):
+    i+=1 
+    filepath = folder+"/"+filename
+    N1 = Data_Class(filepath,10000)
+    N1.main()
+    spike_features = N1.spike_features
+    if total_features.empty:
+        total_features = spike_features
+        continue
+    total_features = pd.concat([total_features,spike_features],ignore_index=True)
+    total_features["Type"]="PD"
+total_features.to_csv("../total_features_PD.csv")
