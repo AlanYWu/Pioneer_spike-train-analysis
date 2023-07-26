@@ -98,7 +98,7 @@ class Data_Class:
         plt.xlabel(self.x_label)
         plt.ylabel(self.titles[1])
         plt.show()
-    def plot_action_potential(self):
+    def plot_action_potential(self,title=None):
         # plot spike train data
         plt.figure("Spike_shape")
         
@@ -108,9 +108,16 @@ class Data_Class:
         x_ticks = pd.DataFrame(x_ticks)
         
         for i in range(self.spike_train.shape[1]):
-            self.spike_train.iloc[:,i]
-            plt.plot(x_ticks,self.spike_train)
+            data = self.spike_train.iloc[:,i]
+            if i==0:
+                line1,=plt.plot(x_ticks,data,"blue")
+                continue
+            line2,=plt.plot(x_ticks,data,"cadetblue")
+        plt.legend(handles=[line1,line2], labels=["First spike","Other spikes"])
         plt.xlabel("Time (ms)")
+        plt.ylabel("Voltage (mv)")
+  
+        plt.title(title)
         
         
 
@@ -348,49 +355,50 @@ class Spike_Processing:
             
 
 # Data viewer: Intact
-N1 = Data_Class("./Data/Intact/N8.txt",10000)
-N1.main()
-spike_features = N1.spike_features
-print(spike_features)
-
-# Data viewer: PD  
-# N1 = Data_Class("./Data/PD/N3_PD.txt",10000)
+# N1 = Data_Class("./Data/Intact/N8.txt",10000)
 # N1.main()
 # spike_features = N1.spike_features
 # print(spike_features)
 
+# Data viewer: PD  
+N2 = Data_Class("./Data/PD/N3_PD.txt",10000)
+N2.main()
+spike_features = N2.spike_features
+print(spike_features)
+
 
 # For Intact
-total_features = pd.DataFrame()
-folder = "./Data/Intact"
-i=0
-for filename in os.listdir(folder):
-    i+=1 
-    filepath = folder+"/"+filename
-    N1 = Data_Class(filepath,10000)
-    N1.main()
-    spike_features = N1.spike_features
-    if total_features.empty:
-        total_features = spike_features
-        continue
-    total_features = pd.concat([total_features,spike_features],ignore_index=True)
-    total_features["Type"]="Intact"
-total_features.to_csv("../total_features_intact.csv")
+# total_features = pd.DataFrame()
+# folder = "./Data/Intact"
+# i=0
+# for filename in os.listdir(folder):
+#     i+=1 
+#     filepath = folder+"/"+filename
+#     N1 = Data_Class(filepath,10000)
+#     N1.main()
+#     spike_features = N1.spike_features
+#     if total_features.empty:
+#         total_features = spike_features
+#         continue
+#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
+#     total_features["Type"]="Intact"
+# total_features.to_csv("../total_features_intact.csv")
 
 
 # For PD
-total_features = pd.DataFrame()
-folder = "./Data/PD"
-i=0
-for filename in os.listdir(folder):
-    i+=1 
-    filepath = folder+"/"+filename
-    N1 = Data_Class(filepath,10000)
-    N1.main()
-    spike_features = N1.spike_features
-    if total_features.empty:
-        total_features = spike_features
-        continue
-    total_features = pd.concat([total_features,spike_features],ignore_index=True)
-    total_features["Type"]="PD"
-total_features.to_csv("../total_features_PD.csv")
+# total_features = pd.DataFrame()
+# folder = "./Data/PD"
+# i=0
+# for filename in os.listdir(folder):
+#     i+=1 
+#     filepath = folder+"/"+filename
+#     N1 = Data_Class(filepath,10000)
+#     N1.main()
+#     spike_features = N1.spike_features
+#     if total_features.empty:
+#         total_features = spike_features
+#         continue
+#     total_features = pd.concat([total_features,spike_features],ignore_index=True)
+#     total_features["Type"]="PD"
+# total_features.to_csv("../total_features_PD.csv")
+plt.show()
