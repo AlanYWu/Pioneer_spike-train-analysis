@@ -355,16 +355,16 @@ class Spike_Processing:
             
 
 # Data viewer: Intact
-# N1 = Data_Class("./Data/Intact/N8.txt",10000)
-# N1.main()
-# spike_features = N1.spike_features
-# print(spike_features)
+N1 = Data_Class("./Data/Intact/N8.txt",10000)
+N1.main()
+spike_features = N1.spike_features
+print(spike_features)
 
 # Data viewer: PD  
-N2 = Data_Class("./Data/PD/N3_PD.txt",10000)
-N2.main()
-spike_features = N2.spike_features
-print(spike_features)
+# N2 = Data_Class("./Data/PD/N3_PD.txt",10000)
+# N2.main()
+# spike_features = N2.spike_features
+# print(spike_features)
 
 
 # For Intact
