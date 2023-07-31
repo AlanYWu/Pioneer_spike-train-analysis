@@ -100,7 +100,7 @@ class Data_Class:
         plt.show()
     def plot_action_potential(self,title=None):
         # plot spike train data
-        plt.figure("Spike_shape")
+        plt.figure("Spike_shape",dpi=300,figsize=(5,5))
         
         length = self.spike_train.__len__()
         
@@ -110,9 +110,9 @@ class Data_Class:
         for i in range(self.spike_train.shape[1]):
             data = self.spike_train.iloc[:,i]
             if i==0:
-                line1,=plt.plot(x_ticks,data,"blue")
+                line1,=plt.plot(x_ticks,data,"firebrick")
                 continue
-            line2,=plt.plot(x_ticks,data,"cadetblue")
+            line2,=plt.plot(x_ticks,data,"darkblue")
         plt.legend(handles=[line1,line2], labels=["First spike","Other spikes"])
         plt.xlabel("Time (ms)")
         plt.ylabel("Voltage (mv)")
