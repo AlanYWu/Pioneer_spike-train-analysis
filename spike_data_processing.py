@@ -354,6 +354,8 @@ class Spike_Processing:
         return width
             
 
+
+
 # Data viewer: Intact
 N1 = Data_Class("./Data/Intact/N8.txt",10000)
 N1.main()
@@ -401,4 +403,8 @@ print(spike_features)
 #     total_features = pd.concat([total_features,spike_features],ignore_index=True)
 #     total_features["Type"]="PD"
 # total_features.to_csv("../total_features_PD.csv")
+
+#set color map
+plt.set_cmap("tab10")
+
 plt.show()
