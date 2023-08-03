@@ -78,11 +78,23 @@ class Data_Class:
                 spike = self.extract_single_spike_data(i)
                 S = Spike_Processing(spike,self.sampling_rate,self.file_path,i+1)
                 feature_extracted = S.spike_processing_main()
+                
+                # Add new feature: First spike latency
+                if i==0:
+                    feature_extracted["1st_latency"]=self.find_first_spike_latency()
+                #     self.spike_features = pd.concat([self.spike_features,feature_extracted],ignore_index=True)
+                #     continue
+                    
+                # if i==1:
+                #     feature_extracted["ISI"]=self.max_voltage[i][0]-self.max_voltage[i-1][0]
+                #     continue
+                # feature_extracted["ISI"]=
                 self.spike_features = pd.concat([self.spike_features,feature_extracted],ignore_index=True)
             return self.spike_features
         find_features = find_features_in_single_spike()
+        
         # Testing new functions
-        find_features.to_csv("find_features.csv")
+        # find_features.to_csv("find_features.csv")
 
     def plot_data(self):
         # fig, axs = plt.subplots(2, 1, figsize=(4, 3), layout='constrained')
@@ -100,7 +112,7 @@ class Data_Class:
         plt.show()
     def plot_action_potential(self,title=None):
         # plot spike train data
-        plt.figure("Spike_shape",dpi=300,figsize=(5,5))
+        plt.figure("Spike_shape",dpi=300,figsize=(3,3))
         
         length = self.spike_train.__len__()
         
@@ -110,13 +122,17 @@ class Data_Class:
         for i in range(self.spike_train.shape[1]):
             data = self.spike_train.iloc[:,i]
             if i==0:
-                line1,=plt.plot(x_ticks,data,"firebrick")
+                line1,=plt.plot(x_ticks,data,"firebrick",zorder=100)
                 continue
-            line2,=plt.plot(x_ticks,data,"darkblue")
-        plt.legend(handles=[line1,line2], labels=["First spike","Other spikes"])
+            if title=="PD":
+                line2,=plt.plot(x_ticks,data,"#1f77b4")
+            elif title=="Intact":
+                line2,=plt.plot(x_ticks,data,"#ff7f0e")
+            else:
+                line2,=plt.plot(x_ticks,data,"darkblue")
+        plt.legend(handles=[line1,line2], labels=["First","Others"],loc="upper right")
         plt.xlabel("Time (ms)")
         plt.ylabel("Voltage (mv)")
-  
         plt.title(title)
         
         
@@ -203,24 +219,27 @@ class Data_Class:
             self.find_other_maximum_points()
             self.voltage_cleaning()
         # fig, axs = plt.subplots(2, 1, figsize=(4, 3), layout='constrained')
-        plt.figure("Combined_spike_and_peak")
+        fig = plt.figure("Combined_spike_and_peak")
             
-        plt.subplot(212)
-        plt.plot(self.current)
+        ax1 = plt.subplot(212)
+        length=len(self.current)
+        x_ticks = np.linspace(0,length*self.each_point,length)
+        ax1.plot(x_ticks,self.current)
+        
         # figure configuration
         # plt.xlabel(x_label)
-        plt.ylabel(self.titles[0])
-        plt.xlabel(self.x_label)
+        ax1.set_ylabel(self.titles[0])
+        ax1.set_xlabel(self.x_label)
         
-        plt.subplot(211)
+        ax2=plt.subplot(211)
         
         length = self.voltage.__len__()
         x_ticks = np.linspace(0,length*self.each_point,length)
         
-        plt.plot(x_ticks,self.voltage)
+        ax2.plot(x_ticks,self.voltage)
         # figure configuration
         
-        plt.ylabel(self.titles[1])
+        ax2.set_ylabel(self.titles[1])
         
     
         
@@ -242,7 +261,7 @@ class Data_Class:
             self.find_other_maximum_points()
             self.voltage_cleaning()
         
-        def find_voltage_max(self,current=100,error = 0.01):
+        def find_voltage_max(self,current=90,error = 0.01):
             current_range = current-current*error
             for i in range(len(self.current)):
                 if all(self.current.loc[i,:]>current_range):                    
@@ -250,7 +269,8 @@ class Data_Class:
             return i
         peak_idx = self.max_voltage[0][0]
         current_idx = find_voltage_max(self)
-        fisrt_spike_latency = current_idx-peak_idx
+        fisrt_spike_latency = (peak_idx-current_idx)/self.sampling_rate*1000
+        
         return fisrt_spike_latency
 
 class Spike_Processing:
@@ -354,13 +374,11 @@ class Spike_Processing:
         return width
             
 
-
-
-# Data viewer: Intact
-N1 = Data_Class("./Data/Intact/N8.txt",10000)
-N1.main()
-spike_features = N1.spike_features
-print(spike_features)
+# # Data viewer: Intact
+# N1 = Data_Class("./Data/Intact/N1.txt",10000)
+# N1.main()
+# spike_features = N1.spike_features
+# print(spike_features)
 
 # Data viewer: PD  
 # N2 = Data_Class("./Data/PD/N3_PD.txt",10000)
@@ -403,8 +421,4 @@ print(spike_features)
 #     total_features = pd.concat([total_features,spike_features],ignore_index=True)
 #     total_features["Type"]="PD"
 # total_features.to_csv("../total_features_PD.csv")
-
-#set color map
-plt.set_cmap("tab10")
-
-plt.show()
+# plt.show()
